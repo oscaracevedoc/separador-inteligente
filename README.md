@@ -76,12 +76,16 @@ streamlit run app.py
 4. Antes de desplegar, abre **"Advanced settings"** → **Secrets**, y pega:
    ```toml
    ANTHROPIC_API_KEY = "sk-ant-tu-clave-aqui"
+   APP_PASSWORD = "una-clave-que-tu-elijas"
    ```
-   (Esto es opcional: si lo dejas vacio, cada persona que use la app puede
-   pegar su propia clave en la barra lateral. Si lo configuras aqui, la app
-   ya viene con una clave por defecto para todos los que la usen — util si
-   la vas a usar tu mismo o un grupo cerrado, pero recuerda que cada pagina
-   procesada consume tu cuota de la API.)
+   - `ANTHROPIC_API_KEY` es opcional: si lo dejas vacio, cada persona que use
+     la app debe pegar su propia clave en la barra lateral. Si lo configuras
+     aqui, la app ya viene con una clave por defecto para todos — util para
+     un grupo cerrado, pero cada pagina procesada consume tu cuota de la API.
+   - `APP_PASSWORD` es opcional y controla el acceso a la app: si lo
+     configuras, cualquiera que entre al link debe ingresar esa clave antes
+     de ver la app (una pantalla simple, la misma clave para todos). Si lo
+     dejas vacio, la app queda abierta a cualquiera con el link.
 5. Click en **Deploy**. En 1-2 minutos la app queda disponible en una URL
    publica del tipo `https://separador-inteligente-xxxx.streamlit.app`,
    accesible desde cualquier navegador, en cualquier dispositivo.

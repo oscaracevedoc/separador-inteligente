@@ -12,6 +12,7 @@ usuarios al mismo tiempo, cada uno con su propia clave de API.
 
 from __future__ import annotations
 
+import hmac
 import os
 
 import streamlit as st
@@ -22,21 +23,49 @@ from src.pipeline import build_csv_log, build_zip, classify_pdf
 MAX_UPLOAD_MB = 40
 
 
-def _default_api_key() -> str:
-    """Busca una clave por defecto: variable de entorno (.env local) o
-    st.secrets (Streamlit Community Cloud). Si no hay ninguna, cada usuario
-    debe pegar la suya en la barra lateral.
+def _get_secret(name: str) -> str:
+    """Busca `name` en variables de entorno (.env local) o en st.secrets
+    (Streamlit Community Cloud). Devuelve "" si no esta configurado.
     """
-    env_key = os.environ.get("ANTHROPIC_API_KEY")
-    if env_key:
-        return env_key
+    env_value = os.environ.get(name)
+    if env_value:
+        return env_value
     try:
-        return str(st.secrets.get("ANTHROPIC_API_KEY", ""))
+        return str(st.secrets.get(name, ""))
     except Exception:
         return ""
 
 
+def _check_access() -> bool:
+    """Pantalla de clave de acceso opcional.
+
+    Si se configura el secret/variable de entorno APP_PASSWORD, la app pide
+    esa clave antes de mostrar cualquier otra cosa (para no dejarla abierta a
+    cualquiera con el link). Si no se configura nada, la app queda publica
+    sin clave.
+    """
+    app_password = _get_secret("APP_PASSWORD")
+    if not app_password:
+        return True
+
+    if st.session_state.get("access_granted"):
+        return True
+
+    st.title("Separador Inteligente de PDF")
+    entered = st.text_input("Clave de acceso", type="password")
+    if st.button("Entrar", type="primary"):
+        if hmac.compare_digest(entered, app_password):
+            st.session_state["access_granted"] = True
+            st.rerun()
+        else:
+            st.error("Clave incorrecta.")
+    return False
+
+
 st.set_page_config(page_title="Separador Inteligente de PDF", layout="wide")
+
+if not _check_access():
+    st.stop()
 
 st.title("Separador Inteligente de PDF")
 st.caption(
@@ -49,7 +78,7 @@ with st.sidebar:
     st.header("Configuracion")
     api_key = st.text_input(
         "Anthropic API key",
-        value=_default_api_key(),
+        value=_get_secret("ANTHROPIC_API_KEY"),
         type="password",
         help="Consiguela en https://console.anthropic.com/settings/keys. "
         "No se guarda en ningun lado: solo se usa durante esta sesion.",
